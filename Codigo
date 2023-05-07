@@ -90,3 +90,13 @@ End Function f2
 !Posicion pendulo 2
 Function f3(t,u3,u4)
 REAL*8::f3,u3,u4,t
+Function f3(t,u3,u4)
+REAL*8::f3,u3,u4,t
+f3=u4
+End Function f3
+!Velocidad pendulo 2
+Function f4(t,u3,u4,u1,u2,m1,m2,l1,l2)
+REAL*8::f4,t,u1,u2,u3,u4,m1,m2,l1,l2
+  REAL*8,PARAMETER::g=9.81d0 
+f4=((2*sin(u1-u3))*(u2**2*l1*(m1+m2))+g*(m1+m2)*cos(u1)+u4**2*l2*m2*cos(u1-u3))/(l2*(2*m1+m2-m2*cos(2*u1-2*u3)))
+End Function f4
