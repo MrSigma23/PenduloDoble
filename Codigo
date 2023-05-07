@@ -1,0 +1,92 @@
+PROGRAM DoblePendulo
+  IMPLICIT NONE
+REAL*8::a,a1,b,b1,m1,m2,l1,l2,t1,t2,k11,k12,k21,k22,k31,k32,k41,k42,k13,k14,k23,k24,k33,k34,k43,k44,h,f1,f2,f3,f4
+  REAL*8,ALLOCATABLE::ti(:),y(:),yp(:),y1(:),yp1(:)
+  INTEGER::i,n
+  OPEN(Unit=11,File="DoblePendulo.dat")
+  Print*,"Cual es el angulo incial del primer pendulo?"
+  READ*,a
+  PRINT*,"Cual es el angulo inicial del segundo pendulo?"
+  READ*,a1
+  PRINT*,"Cual es la velocidad inicial del primer pendulo?"
+  READ*,b
+  PRINT*,"CUal es la velocidad inicial del segundo pendulo?"
+  READ*,b1
+  PRINT*,"Cual es la masa del pendulo 1?"
+  READ*,m1
+  PRINT*,"Cual es la masa del pendulo 2?"
+  READ*,m2
+  PRINT*,"Cual es la longitud del pendulo 1?"
+  READ*,l1
+  PRINT*,"Cual es la longitud dek pendulo 2?"
+  READ*,l2
+  PRINT*,"En que tiempo quieres iniciar?"
+  READ*,t1
+  PRINT*,"En que tiempo quieres terminar?"
+  READ*,t2
+  PRINT*,"Cuantos pasos quieres?"
+  READ*,n
+   ALLOCATE(ti(0:n),y(0:n),yp(0:n),y1(0:n),yp1(0:n))
+ !Tamaño del paso
+ h=(t2-t1)/n
+  
+  ti(0)=t1
+  y(0)=a
+  y1(0)=a1
+  yp(0)=b
+  yp1(0)=b1
+!Calculo de las aproximaciones por RK4                                                                                                           
+  Do i=1,n
+     !Calculo del suiguiente tiempo
+     ti(i)=ti(0)+i*h
+     !Calculo de las Ks y la solucion aparoximada para el primer pendulo                                                         
+     k11=h*f1(ti(i-1),y(i-1),yp(i-1))
+     k12=h*f2(ti(i-1),y(i-1),yp(i-1),y1(i-1),yp1(i-1),m1,m2,l1,l2)
+     k21=h*f1(ti(i-1)+0.5*h,y(i-1)+0.5*k11,yp(i-1)+0.5*k12)
+     k22=h*f2(ti(i-1)+0.5*h,y(i-1)+0.5*k11,yp(i-1)+0.5*k12,y1(i-1),yp1(i-1),m1,m2,l1,l2)
+     k31=h*f1(ti(i-1)+0.5*h,y(i-1)+0.5*k21,yp(i-1)+0.5*k22)
+     k32=h*f2(ti(i-1)+0.5*h,y(i-1)+0.5*k21,yp(i-1)+0.5*k22,y1(i-1),yp1(i-1),m1,m2,l1,l2)
+     k41=h*f1(ti(i-1)+h,y(i-1)+0.5*k31,yp(i-1)+0.5*k32)
+     k42=h*f2(ti(i-1)+h,y(i-1)+0.5*k31,yp(i-1)+0.5*k32,y1(i-1),yp1(i-1),m1,m2,l1,l2)
+
+     y(i)=y(i-1)+(k11+2*k21+2*k31+k41)/6.0d0
+     yp(i)=yp(i-1)+(k12+2*k22+2*k32+k42)/6.0d0
+
+ !Calculos de las Ks y la solucion aproximada del segundo pendulo
+     k13=h*f3(ti(i-1),y1(i-1),yp1(i-1))
+     k14=h*f4(ti(i-1),y1(i-1),yp1(i-1),y(i-1),yp(i-1),m1,m2,l1,l2)
+     k23=h*f3(ti(i-1)+0.5*h,y1(i-1)+0.5*k13,yp1(i-1)+0.5*k14)
+     k24=h*f4(ti(i-1)+0.5*h,y1(i-1)+0.5*k13,yp1(i-1)+0.5*k14,y(i-1),yp(i-1),m1,m2,l1,l2)
+     k33=h*f3(ti(i-1)+0.5*h,y1(i-1)+0.5*k23,yp1(i-1)+0.5*k24)
+     k34=h*f4(ti(i-1)+0.5*h,y1(i-1)+0.5*k23,yp1(i-1)+0.5*k24,y(i-1),yp(i-1),m1,m2,l1,l2)
+     k43=h*f3(ti(i-1)+h,y1(i-1)+0.5*k33,yp1(i-1)+0.5*k34)
+     k44=h*f4(ti(i-1)+h,y1(i-1)+0.5*k33,yp1(i-1)+0.5*k34,y(i-1),yp(i-1),m1,m2,l1,l2)
+
+     y1(i)=y1(i-1)+(k13+2*k23+2*k33+k43)/6.0d0
+     yp1(i)=yp1(i-1)+(k14+2*k24+2*k34+k44)/6.0d0
+ 
+  End Do
+
+WRITE(11,'(A15,A25,A25,A25,A25)')"Tiempo","SolPen1","VelPen1","SolPen2","VelPen2"
+Do i=0,n
+
+WRITE(11,*)ti(i),y(i),yp(i),y1(i),yp1(i)
+End do
+Close(Unit=11)
+
+END PROGRAM
+!Posicion pendulo 1
+Function f1(t,u1,u2)
+REAL*8::f1,u1,u2,t
+f1=u2
+End function f1
+!Velocidad pendulo 1
+Function f2(t,u1,u2,u3,u4,m1,m2,l1,l2)
+  REAL*8::t,u1,u2,u3,u4,f2,y1,m1,m2,l1,l2
+  REAL*8,PARAMETER::g=9.81d0 
+  f2=(-g*(2*m1+m2)*sin(u1)-m2*g*sin(u1-2*u3)-2*sin(u1-u3)*m2*(u4**2*l2+u2**2*l1*cos(u1-u3)))/(l1*(2*m1+m2-m2*cos(2*u1-2*u3)))
+End Function f2
+
+!Posicion pendulo 2
+Function f3(t,u3,u4)
+REAL*8::f3,u3,u4,t
